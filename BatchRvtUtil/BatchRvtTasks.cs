@@ -187,13 +187,14 @@ public static class BatchRvtTasks
             fallbackToMinimumAvailableRevitVersion
         );
 
-        var commandSettingsData = new CommandSettings.Data();
-
-        commandSettingsData.RevitFileList = revitFileListInput as IEnumerable<string>;
-        commandSettingsData.Settings = batchRvtSettings;
-        commandSettingsData.LogFolderPath = logFolderPath;
-        commandSettingsData.TaskData = taskData;
-        commandSettingsData.TestModeFolderPath = testModeFolderPath;
+        var commandSettingsData = new CommandSettings.Data
+        {
+            RevitFileList = revitFileListInput as IEnumerable<string>,
+            Settings = batchRvtSettings,
+            LogFolderPath = logFolderPath,
+            TaskData = taskData,
+            TestModeFolderPath = testModeFolderPath
+        };
 
         return RunTask(commandSettingsData, openLogFileWhenDone);
     }
@@ -265,10 +266,8 @@ public static class BatchRvtTasks
                                      string.IsNullOrWhiteSpace(batchRvtSettings.RevitFileListFilePath.GetValue())
                                      &&
                                      commandSettingsData.RevitFileList == null)
-        {
             throw new ArgumentNullException(@"No Revit file list was specified for Batch processing mode.");
-        }
-            
+
 
         commandSettingsData.GeneratedLogFilePath = null;
 

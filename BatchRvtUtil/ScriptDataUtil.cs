@@ -17,212 +17,249 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //
+
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
 using Newtonsoft.Json.Linq;
 
-namespace BatchRvtUtil
+namespace BatchRvtUtil;
+
+public static class ScriptDataUtil
 {
-    public static class ScriptDataUtil
+    private const string SCRIPT_DATA_FILENAME_PREFIX = "Session.ScriptData.";
+    private const string SESSION_PROGRESS_RECORD_PREFIX = "Session.ProgressRecord.";
+    private const string JSON_FILE_EXTENSION = ".json";
+
+    public static IEnumerable<ScriptData> LoadManyFromFile(string filePath)
     {
-        private const string SCRIPT_DATA_FILENAME_PREFIX = "Session.ScriptData.";
-        private const string SESSION_PROGRESS_RECORD_PREFIX = "Session.ProgressRecord.";
-        private const string JSON_FILE_EXTENSION = ".json";
+        List<ScriptData> scriptDatas = null;
 
-        public class ScriptData : IPersistent
+        if (!File.Exists(filePath)) return null;
+        try
         {
-            private readonly PersistentSettings persistentSettings;
+            var text = File.ReadAllText(filePath);
 
-            public readonly StringSetting SessionId = new StringSetting("sessionId");
-            public readonly StringSetting RevitFilePath = new StringSetting("revitFilePath");
-            public readonly BooleanSetting IsCloudModel = new BooleanSetting("isCloudModel");
-            public readonly StringSetting CloudProjectId = new StringSetting("cloudProjectId");
-            public readonly StringSetting CloudModelId = new StringSetting("cloudModelId");
-            public readonly BooleanSetting EnableDataExport = new BooleanSetting("enableDataExport");
-            public readonly StringSetting TaskScriptFilePath = new StringSetting("taskScriptFilePath");
-            public readonly StringSetting TaskData = new StringSetting("taskData");
-            public readonly StringSetting SessionDataFolderPath = new StringSetting("sessionDataFolderPath");
-            public readonly StringSetting DataExportFolderPath = new StringSetting("dataExportFolderPath");
-            public readonly BooleanSetting ShowMessageBoxOnTaskScriptError = new BooleanSetting("showMessageBoxOnTaskError");
-            public readonly EnumSetting<BatchRvt.RevitProcessingOption> RevitProcessingOption = new EnumSetting<BatchRvt.RevitProcessingOption>("revitProcessingOption");
-            public readonly EnumSetting<BatchRvt.CentralFileOpenOption> CentralFileOpenOption = new EnumSetting<BatchRvt.CentralFileOpenOption>("centralFileOpenOption");
-            public readonly BooleanSetting DeleteLocalAfter = new BooleanSetting("deleteLocalAfter");
-            public readonly BooleanSetting DiscardWorksetsOnDetach = new BooleanSetting("discardWorksetsOnDetach");
-            public readonly EnumSetting<BatchRvt.WorksetConfigurationOption> WorksetConfigurationOption = new EnumSetting<BatchRvt.WorksetConfigurationOption>("worksetConfigurationOption");
-            public readonly BooleanSetting OpenInUI = new BooleanSetting("openInUI");
-            public readonly BooleanSetting AuditOnOpening = new BooleanSetting("auditOnOpening");
-            public readonly IntegerSetting ProgressNumber = new IntegerSetting("progressNumber");
-            public readonly IntegerSetting ProgressMax = new IntegerSetting("progressMax");
-            public readonly ListSetting<string> AssociatedData = new ListSetting<string>("associatedData");
+            var jarray = JsonUtil.DeserializeArrayFromJson(text);
 
-            public ScriptData()
+            scriptDatas = new List<ScriptData>();
+
+            foreach (var jtoken in jarray)
             {
-                this.persistentSettings = new PersistentSettings(
-                        new IPersistent[]
-                        {
-                            this.SessionId,
-                            this.RevitFilePath,
-                            this.IsCloudModel,
-                            this.CloudProjectId,
-                            this.CloudModelId,
-                            this.EnableDataExport,
-                            this.TaskScriptFilePath,
-                            this.TaskData,
-                            this.SessionDataFolderPath,
-                            this.DataExportFolderPath,
-                            this.ShowMessageBoxOnTaskScriptError,
-                            this.RevitProcessingOption,
-                            this.CentralFileOpenOption,
-                            this.DeleteLocalAfter,
-                            this.DiscardWorksetsOnDetach,
-                            this.WorksetConfigurationOption,
-                            this.OpenInUI,
-                            this.AuditOnOpening,
-                            this.ProgressNumber,
-                            this.ProgressMax,
-                            this.AssociatedData
-                        }
-                    );
+                var jobject = jtoken as JObject;
+
+                if (jobject == null) continue;
+                var scriptData = new ScriptData();
+
+                scriptData.Load(jobject);
+
+                scriptDatas.Add(scriptData);
             }
 
-            public void Load(JObject jobject)
-            {
-                this.persistentSettings.Load(jobject);
-            }
+            return scriptDatas;
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
 
-            public void Store(JObject jobject)
-            {
-                this.persistentSettings.Store(jobject);
-            }
+    public static bool SaveManyToFile(string filePath, IEnumerable<ScriptData> scriptDatas)
+    {
+        var success = false;
 
-            public bool LoadFromFile(string filePath)
-            {
-                
+        try
+        {
+            var jarray = new JArray();
 
-                if (!File.Exists(filePath)) return false;
-                try
-                {
-                    var text = File.ReadAllText(filePath);
-                    var jobject = JsonUtil.DeserializeFromJson(text);
-                    this.persistentSettings.Load(jobject);
-                }
-                catch (Exception e)
-                {
-                    return false;
-                }
-
-                return true;
-            }
-
-            public bool SaveToFile(string filePath)
-            {
-                var success = false;
-
-                var jobject = new JObject();
-
-                try
-                {
-                    this.persistentSettings.Store(jobject);
-                    var settingsText = JsonUtil.SerializeToJson(jobject, true);
-                    var fileInfo = new FileInfo(filePath);
-                    fileInfo.Directory.Create();
-                    File.WriteAllText(fileInfo.FullName, settingsText);
-
-                    success = true;
-                }
-                catch (Exception e)
-                {
-                    success = false;
-                }
-
-                return success;
-            }
-
-            public string ToJsonString()
+            foreach (var scriptData in scriptDatas)
             {
                 var jobject = new JObject();
-                this.Store(jobject);
-                return jobject.ToString();
+
+                scriptData.Store(jobject);
+
+                jarray.Add(jobject);
             }
 
-            public static ScriptData FromJsonString(string scriptDataJson)
-            {
-                ScriptData scriptData = null;
+            var settingsText = JsonUtil.SerializeToJson(jarray, true);
 
-                try
-                {
-                    var jobject = JsonUtil.DeserializeFromJson(scriptDataJson);
-                    scriptData = new ScriptData();
-                    scriptData.Load(jobject);
-                }
-                catch (Exception e)
-                {
-                    scriptData = null;
-                }
+            var fileInfo = new FileInfo(filePath);
 
-                return scriptData;
-            }
+            if (fileInfo.Directory != null) fileInfo.Directory.Create();
+
+            File.WriteAllText(fileInfo.FullName, settingsText);
+
+            success = true;
+        }
+        catch (Exception e)
+        {
+            success = false;
         }
 
-        public static IEnumerable<ScriptData> LoadManyFromFile(string filePath)
-        {
-            List<ScriptData> scriptDatas = null;
+        return success;
+    }
 
-            if (!File.Exists(filePath)) return (List<ScriptData>)null;
+    public static string GetUniqueScriptDataFilePath()
+    {
+        var uniqueId = Guid.NewGuid().ToString();
+
+        return Path.Combine(
+            BatchRvt.GetDataFolderPath(),
+            SCRIPT_DATA_FILENAME_PREFIX + uniqueId + JSON_FILE_EXTENSION
+        );
+    }
+
+    public static string GetProgressRecordFilePath(string scriptDataFilePath)
+    {
+        var uniqueId = Path.GetFileNameWithoutExtension(scriptDataFilePath)
+            .Substring(SCRIPT_DATA_FILENAME_PREFIX.Length);
+
+        return Path.Combine(
+            Path.GetDirectoryName(scriptDataFilePath),
+            SESSION_PROGRESS_RECORD_PREFIX + uniqueId + JSON_FILE_EXTENSION
+        );
+    }
+
+    public static bool SetProgressNumber(string progressRecordFilePath, int progressNumber)
+    {
+        try
+        {
+            var fileInfo = new FileInfo(progressRecordFilePath);
+
+            if (fileInfo.Directory != null)
+                fileInfo.Directory.Create();
+
+            File.WriteAllText(fileInfo.FullName, progressNumber.ToString());
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+    }
+
+    public static int? GetProgressNumber(string progressRecordFilePath)
+    {
+        int? progressNumber = null;
+
+        try
+        {
+            var fileInfo = new FileInfo(progressRecordFilePath);
+
+            progressNumber = int.Parse(File.ReadAllText(fileInfo.FullName).Trim());
+        }
+        catch (Exception e)
+        {
+            progressNumber = null;
+        }
+
+        return progressNumber;
+    }
+
+    public class ScriptData : IPersistent
+    {
+        public readonly ListSetting<string> AssociatedData = new("associatedData");
+        public readonly BooleanSetting AuditOnOpening = new("auditOnOpening");
+
+        public readonly EnumSetting<BatchRvt.CentralFileOpenOption>
+            CentralFileOpenOption = new("centralFileOpenOption");
+
+        public readonly StringSetting CloudModelId = new("cloudModelId");
+        public readonly StringSetting CloudProjectId = new("cloudProjectId");
+        public readonly StringSetting DataExportFolderPath = new("dataExportFolderPath");
+        public readonly BooleanSetting DeleteLocalAfter = new("deleteLocalAfter");
+        public readonly BooleanSetting DiscardWorksetsOnDetach = new("discardWorksetsOnDetach");
+        public readonly BooleanSetting EnableDataExport = new("enableDataExport");
+        public readonly BooleanSetting IsCloudModel = new("isCloudModel");
+        public readonly BooleanSetting OpenInUI = new("openInUI");
+        private readonly PersistentSettings persistentSettings;
+        public readonly IntegerSetting ProgressMax = new("progressMax");
+        public readonly IntegerSetting ProgressNumber = new("progressNumber");
+        public readonly StringSetting RevitFilePath = new("revitFilePath");
+
+        public readonly EnumSetting<BatchRvt.RevitProcessingOption>
+            RevitProcessingOption = new("revitProcessingOption");
+
+        public readonly StringSetting SessionDataFolderPath = new("sessionDataFolderPath");
+
+        public readonly StringSetting SessionId = new("sessionId");
+        public readonly BooleanSetting ShowMessageBoxOnTaskScriptError = new("showMessageBoxOnTaskError");
+        public readonly StringSetting TaskData = new("taskData");
+        public readonly StringSetting TaskScriptFilePath = new("taskScriptFilePath");
+
+        public readonly EnumSetting<BatchRvt.WorksetConfigurationOption> WorksetConfigurationOption =
+            new("worksetConfigurationOption");
+
+        public ScriptData()
+        {
+            persistentSettings = new PersistentSettings(
+                new IPersistent[]
+                {
+                    SessionId,
+                    RevitFilePath,
+                    IsCloudModel,
+                    CloudProjectId,
+                    CloudModelId,
+                    EnableDataExport,
+                    TaskScriptFilePath,
+                    TaskData,
+                    SessionDataFolderPath,
+                    DataExportFolderPath,
+                    ShowMessageBoxOnTaskScriptError,
+                    RevitProcessingOption,
+                    CentralFileOpenOption,
+                    DeleteLocalAfter,
+                    DiscardWorksetsOnDetach,
+                    WorksetConfigurationOption,
+                    OpenInUI,
+                    AuditOnOpening,
+                    ProgressNumber,
+                    ProgressMax,
+                    AssociatedData
+                }
+            );
+        }
+
+        public void Load(JObject jobject)
+        {
+            persistentSettings.Load(jobject);
+        }
+
+        public void Store(JObject jobject)
+        {
+            persistentSettings.Store(jobject);
+        }
+
+        public bool LoadFromFile(string filePath)
+        {
+            if (!File.Exists(filePath)) return false;
             try
             {
                 var text = File.ReadAllText(filePath);
-
-                var jarray = JsonUtil.DeserializeArrayFromJson(text);
-
-                scriptDatas = new List<ScriptData>();
-
-                foreach (var jtoken in jarray)
-                {
-                    var jobject = jtoken as JObject;
-
-                    if (jobject == null) continue;
-                    var scriptData = new ScriptData();
-
-                    scriptData.Load(jobject);
-
-                    scriptDatas.Add(scriptData);
-                }
-                return scriptDatas;
+                var jobject = JsonUtil.DeserializeFromJson(text);
+                persistentSettings.Load(jobject);
             }
             catch (Exception e)
             {
-                return null; 
+                return false;
             }
 
-            
+            return true;
         }
 
-        public static bool SaveManyToFile(string filePath, IEnumerable<ScriptData> scriptDatas)
+        public bool SaveToFile(string filePath)
         {
-            bool success = false;
+            var success = false;
+
+            var jobject = new JObject();
 
             try
             {
-                var jarray = new JArray();
-
-                foreach (var scriptData in scriptDatas)
-                {
-                    var jobject = new JObject();
-
-                    scriptData.Store(jobject);
-
-                    jarray.Add(jobject);
-                }
-
-                var settingsText = JsonUtil.SerializeToJson(jarray, true);
-                
+                persistentSettings.Store(jobject);
+                var settingsText = JsonUtil.SerializeToJson(jobject, true);
                 var fileInfo = new FileInfo(filePath);
-                
-                fileInfo.Directory.Create();
-
+                if (fileInfo.Directory != null) fileInfo.Directory.Create();
                 File.WriteAllText(fileInfo.FullName, settingsText);
 
                 success = true;
@@ -235,67 +272,29 @@ namespace BatchRvtUtil
             return success;
         }
 
-        public static string GetUniqueScriptDataFilePath()
+        public string ToJsonString()
         {
-            var uniqueId = Guid.NewGuid().ToString();
-
-            return Path.Combine(
-                    BatchRvt.GetDataFolderPath(),
-                    SCRIPT_DATA_FILENAME_PREFIX + uniqueId + JSON_FILE_EXTENSION
-                );
+            var jobject = new JObject();
+            Store(jobject);
+            return jobject.ToString();
         }
 
-        public static string GetProgressRecordFilePath(string scriptDataFilePath)
+        public static ScriptData FromJsonString(string scriptDataJson)
         {
-            var uniqueId = (
-                    Path.GetFileNameWithoutExtension(scriptDataFilePath)
-                    .Substring(SCRIPT_DATA_FILENAME_PREFIX.Length)
-                );
-
-            return Path.Combine(
-                    Path.GetDirectoryName(scriptDataFilePath),
-                    SESSION_PROGRESS_RECORD_PREFIX + uniqueId + JSON_FILE_EXTENSION
-                );
-        }
-
-        public static bool SetProgressNumber(string progressRecordFilePath, int progressNumber)
-        {
-            bool success = false;
+            ScriptData scriptData = null;
 
             try
             {
-                var fileInfo = new FileInfo(progressRecordFilePath);
-
-                fileInfo.Directory.Create();
-
-                File.WriteAllText(fileInfo.FullName, progressNumber.ToString());
-
-                success = true;
+                var jobject = JsonUtil.DeserializeFromJson(scriptDataJson);
+                scriptData = new ScriptData();
+                scriptData.Load(jobject);
             }
             catch (Exception e)
             {
-                success = false;
+                scriptData = null;
             }
 
-            return success;
-        }
-
-        public static int? GetProgressNumber(string progressRecordFilePath)
-        {
-            int? progressNumber = null;
-
-            try
-            {
-                var fileInfo = new FileInfo(progressRecordFilePath);
-
-                progressNumber = int.Parse(File.ReadAllText(fileInfo.FullName).Trim());
-            }
-            catch (Exception e)
-            {
-                progressNumber = null;
-            }
-
-            return progressNumber;
+            return scriptData;
         }
     }
 }

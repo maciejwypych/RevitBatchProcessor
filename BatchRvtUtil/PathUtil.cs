@@ -180,7 +180,7 @@ public static class PathUtil
     {
         var needToAddSearchPath = _engine == null;
 
-        _engine = _engine ?? ScriptUtil.CreatePythonEngine();
+        _engine ??= ScriptUtil.CreatePythonEngine();
 
         if (needToAddSearchPath)
         {
@@ -189,19 +189,14 @@ public static class PathUtil
             ScriptUtil.AddSearchPaths(_engine, new[] { scriptsFolderPath });
         }
 
-        _pathUtilModuleScope = _pathUtilModuleScope ?? IronPythonHosting.Python.ImportModule(_engine, "path_util");
-        _pythonFunctionExpandedFullNetworkPath = _pythonFunctionExpandedFullNetworkPath ??
-                                                  _pathUtilModuleScope.GetVariable("ExpandedFullNetworkPath");
+        _pathUtilModuleScope ??= IronPythonHosting.Python.ImportModule(_engine, "path_util");
+        _pythonFunctionExpandedFullNetworkPath ??= _pathUtilModuleScope.GetVariable("ExpandedFullNetworkPath");
 
-        _revitFileListModuleScope = _revitFileListModuleScope ??
-                                   IronPythonHosting.Python.ImportModule(_engine, "revit_file_list");
-        _pythonFunctionRevitFileInfo =
-            _pythonFunctionRevitFileInfo ?? _revitFileListModuleScope.GetVariable("RevitFileInfo");
+        _revitFileListModuleScope ??= IronPythonHosting.Python.ImportModule(_engine, "revit_file_list");
+        _pythonFunctionRevitFileInfo ??= _revitFileListModuleScope.GetVariable("RevitFileInfo");
 
-        _revitFileVersionModuleScope = _revitFileVersionModuleScope ??
-                                      IronPythonHosting.Python.ImportModule(_engine, "revit_file_version");
-        _pythonFunctionGetRevitVersionNumberTextFromRevitVersionText =
-            _pythonFunctionGetRevitVersionNumberTextFromRevitVersionText ??
+        _revitFileVersionModuleScope ??= IronPythonHosting.Python.ImportModule(_engine, "revit_file_version");
+        _pythonFunctionGetRevitVersionNumberTextFromRevitVersionText ??=
             _revitFileVersionModuleScope.GetVariable("GetRevitVersionNumberTextFromRevitVersionText");
     }
 

@@ -328,7 +328,7 @@ def TryGetBasicFileInfo(revitFilePath):
     basicFileInfo = None
     try:
         basicFileInfo = BasicFileInfo.Extract(revitFilePath)
-    except Exception, e:
+    except Exception as e:
         basicfileInfo = None
     return basicFileInfo
 
@@ -337,7 +337,7 @@ def GetSavedInVersion(basicFileInfo):
     try:
         # <= Revit 2019
         savedInVersion = basicFileInfo.SavedInVersion
-    except System.MissingMemberException, e:
+    except System.MissingMemberException as e:
         # Revit 2020+
         savedInVersion = basicFileInfo.Format
     return savedInVersion

@@ -428,10 +428,7 @@ public partial class BatchRvtGuiForm : Form
 
     private void BatchRvtGuiForm_FormClosing(object sender, FormClosingEventArgs e)
     {
-        if (!isBatchRvtRunning)
-        {
-            return;
-        }
+        if (!isBatchRvtRunning) return;
 
         var message = new StringBuilder();
 
@@ -456,14 +453,10 @@ public partial class BatchRvtGuiForm : Form
             {
                 // TODO: report failure to kill the process?
             }
-        
 
-        if (e.Cancel)
-        {
-            return;
-        }
-        
-           
+
+        if (e.Cancel) return;
+
 
         message.AppendLine("Do you want to save the current settings as default?");
 
@@ -482,13 +475,9 @@ public partial class BatchRvtGuiForm : Form
             // TODO: show error message if save failed!!
         }
 
-        if (readBatchRvtOutput_Timer == null)
-        {
-            return;
-        }
+        if (readBatchRvtOutput_Timer == null) return;
         readBatchRvtOutput_Timer.Stop();
         readBatchRvtOutput_Timer.Dispose();
-
     }
 
     private void alwaysOnTopCheckbox_CheckedChanged(object sender, EventArgs e)
@@ -608,10 +597,9 @@ public partial class BatchRvtGuiForm : Form
         pendingErrorReadLineTask = linesAndPendingTask.Item2;
         lines = linesAndPendingTask.Item1;
 
-        foreach (var line in lines.Where(line => !line.StartsWith("log4cplus:")).Where(line => Settings.ShowRevitProcessErrorMessages.GetValue()))
-        {
+        foreach (var line in lines.Where(line => !line.StartsWith("log4cplus:"))
+                     .Where(line => Settings.ShowRevitProcessErrorMessages.GetValue()))
             batchRvtOutputTextBox.AppendText("[ REVIT ERROR MESSAGE ] : " + line + Environment.NewLine);
-        }
 
         if (!isBatchRvtRunning) return;
         batchRvtProcess.Refresh();
@@ -1068,10 +1056,12 @@ public partial class BatchRvtGuiForm : Form
         );
 
         if (isUsingRunningSize) return;
-        Size = new Size(Size.Width,
-            advancedSettingsIsChecked
+        Size = Size with
+        {
+            Height = advancedSettingsIsChecked
                 ? SETUP_HEIGHT
-                : SETUP_HEIGHT - ADVANCED_SETTINGS_VISIBLE_SIZE_DIFFERENCE);
+                : SETUP_HEIGHT - ADVANCED_SETTINGS_VISIBLE_SIZE_DIFFERENCE
+        };
         MaximumSize = Scale(
             new Size(SETUP_MAXIMUM_WIDTH,
                 advancedSettingsIsChecked

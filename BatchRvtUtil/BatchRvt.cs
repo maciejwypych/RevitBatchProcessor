@@ -71,19 +71,13 @@ public static class BatchRvt
 
     public static string ConstructCommandLineArguments(IEnumerable<KeyValuePair<string, string>> commandLineArguments)
     {
-        if (commandLineArguments is null or not IEnumerable<KeyValuePair<string, string>>)
-        {
-            throw new ArgumentException("You passed a wrong argument");
-        }
+        if (commandLineArguments is null or not not null) throw new ArgumentException("You passed a wrong argument");
         return string.Join(" ", commandLineArguments.Select(arg => "--" + arg.Key + " " + arg.Value));
     }
 
     public static bool IsBatchRvtLine(string line)
     {
-        if (line is null)
-        {
-            throw new ArgumentException("Argument can't be null");
-        }
+        if (line is null) throw new ArgumentException("Argument can't be null");
         var parts = line.Split();
 
         var success =
@@ -102,7 +96,8 @@ public static class BatchRvt
     {
         var baseDirectory = GetBatchRvtFolderPath();
 
-        var batchRvtOptions = SetBatchRvtOptions(settingsFilePath, logFolderPath, sessionId, taskData, testModeFolderPath);
+        var batchRvtOptions =
+            SetBatchRvtOptions(settingsFilePath, logFolderPath, sessionId, taskData, testModeFolderPath);
 
         var psi = new ProcessStartInfo(Path.Combine(baseDirectory, "BatchRvt.exe"))
         {
@@ -121,7 +116,8 @@ public static class BatchRvt
         return batchRvtProcess;
     }
 
-    private static Dictionary<string, string> SetBatchRvtOptions(string settingsFilePath, string logFolderPath, string sessionId,
+    private static Dictionary<string, string> SetBatchRvtOptions(string settingsFilePath, string logFolderPath,
+        string sessionId,
         string taskData, string testModeFolderPath)
     {
         var batchRvtOptions = new Dictionary<string, string>

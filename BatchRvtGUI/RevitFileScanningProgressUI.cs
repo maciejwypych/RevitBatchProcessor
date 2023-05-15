@@ -29,7 +29,6 @@ public partial class RevitFileScanningProgressUI : Form
     private readonly Action<Func<string, bool>> actionWithProgressReporting_;
     private BackgroundWorker backgroundWorker_;
     private string currentProgressMessage_ = string.Empty;
-    private Timer progressUpdateTimer_;
     private bool scanningCancelled_;
     private bool scanningCompleted_;
 

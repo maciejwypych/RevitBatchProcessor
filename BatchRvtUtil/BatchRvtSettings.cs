@@ -150,6 +150,7 @@ public class BatchRvtSettings : IPersistent
         }
         catch (Exception e)
         {
+            
             return false;
         }
         

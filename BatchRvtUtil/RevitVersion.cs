@@ -38,7 +38,8 @@ public static class RevitVersion
         Revit2020 = 5,
         Revit2021 = 6,
         Revit2022 = 7,
-        Revit2023 = 8
+        Revit2023 = 8,
+        Revit2024 = 9
     }
 
     private const string REVIT_EXECUTABLE_FILE_NAME = "Revit.exe";

@@ -27,6 +27,6 @@ def IsDynamoNotFoundException(exception):
     return (
             isinstance(exception, Exception)
             and
-            e.message == DYNAMO_REVIT_MODULE_NOT_FOUND_ERROR_MESSAGE
+            exception.message == DYNAMO_REVIT_MODULE_NOT_FOUND_ERROR_MESSAGE
         )
 

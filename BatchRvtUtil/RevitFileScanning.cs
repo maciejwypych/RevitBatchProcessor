@@ -60,7 +60,7 @@ public static class RevitFileScanning
             progressReporter);
 
         var filePaths = revitFilePaths as string[] ?? revitFilePaths.ToArray();
-        var numberOfRevitFilePaths = filePaths.Count();
+        var numberOfRevitFilePaths = filePaths.Length;
 
         var cancelled = progressReporter(string.Empty);
 

@@ -32,11 +32,7 @@ public static class StreamIOUtil
     {
         Task<string> nextPendingReadLineTask;
         var lines = new List<string>();
-
-        Task<string> readLineTask = null;
-
-        readLineTask = pendingReadLineTask ?? streamReader.ReadLineAsync();
-
+        var readLineTask = pendingReadLineTask ?? streamReader.ReadLineAsync();
         var reachedEndOfStream = false;
 
         while (readLineTask.Status == TaskStatus.RanToCompletion && !reachedEndOfStream)
@@ -56,23 +52,11 @@ public static class StreamIOUtil
         if (reachedEndOfStream)
             nextPendingReadLineTask = null;
         else
-            switch (readLineTask.Status)
+            nextPendingReadLineTask = readLineTask.Status switch
             {
-                case TaskStatus.Faulted:
-                case TaskStatus.Canceled:
-                    nextPendingReadLineTask = null;
-                    break;
-                case TaskStatus.Created:
-                case TaskStatus.WaitingForActivation:
-                case TaskStatus.WaitingToRun:
-                case TaskStatus.Running:
-                case TaskStatus.WaitingForChildrenToComplete:
-                case TaskStatus.RanToCompletion:
-                default:
-                    nextPendingReadLineTask = readLineTask;
-                    break;
-            }
-
+                TaskStatus.Faulted or TaskStatus.Canceled => null,
+                _ => readLineTask
+            };
         return Tuple.Create(lines, nextPendingReadLineTask);
     }
 }
