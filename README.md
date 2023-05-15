@@ -9,9 +9,9 @@ Fully automated batch processing of Revit files with your own Python or Dynamo t
 
 ## Latest version (NEW)
 
-[Installer for Revit Batch Processor v1.9.0 beta](https://github.com/bvn-architecture/RevitBatchProcessor/releases/download/v1.9.0-beta/RevitBatchProcessorSetup_v1.9.0.exe)
+Version 1.10.0 beta release is available, which adds support for Revit 2024. Installer is not yet availible.
 
-Version 1.9.0 beta release is available, which adds support for Revit 2023.
+[Installer for Revit Batch Processor v1.9.0 beta](https://github.com/bvn-architecture/RevitBatchProcessor/releases/download/v1.9.0-beta/RevitBatchProcessorSetup_v1.9.0.exe)
 
 See the [Releases](https://github.com/bvn-architecture/RevitBatchProcessor/releases) page for more information.
 
@@ -72,7 +72,7 @@ The Revit Batch Processor (GUI) application will appear in the Start menu after 
 
 Open the solution file RevitBatchProcessor.sln in Visual Studio 2017 or later and run Build Solution (F6).
 
-Revit addins will be automatically deployed to the Addins folder for each available Revit version [2015-2023]. e.g. %APPDATA%\Autodesk\Revit\Addins\2019
+Revit addins will be automatically deployed to the Addins folder for each available Revit version [2015-2024]. e.g. %APPDATA%\Autodesk\Revit\Addins\2019
 
 The BatchRvtGUI project is the GUI that drives the underlying engine (the BatchRvt project). Once built, run BatchRvtGUI.exe to start the Revit Batch Processor GUI.
 
@@ -80,7 +80,7 @@ When rebuilding, please make sure all Revit applications are closed before attem
 
 # Requirements
 
-- At least one version of Revit installed. Currently supports Revit versions 2015 through 2023.
+- At least one version of Revit installed. Currently supports Revit versions 2015 through 2024.
 - To build from source code, Visual Studio version 2017 or later.
 - If executing Dynamo scripts from the task script, Dynamo 1.3+ installed (currently supports Revit versions 2016 through 2023). NOTE: The Dynamo script MUST have been saved with the 'Automatic' Run mode. There **MUST BE EXACTLY ONE VERSION OF DYNAMO INSTALLED** for each version of Revit.
 - If using an Excel file for the Revit File List, Microsoft Office / Excel installed.
